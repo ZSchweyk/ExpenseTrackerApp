@@ -1,42 +1,10 @@
 import { createContext, useReducer } from "react";
 import { TransactionData, Transaction, Action } from "../types";
 
-const DUMMY_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'e1',
-    description: 'A pair of shoes',
-    amount: -59.99,
-    date: new Date(2024, 1, 14, 4, 35)
-  },
-  {
-    id: 'e2',
-    description: 'A pair of trousers',
-    amount: -89.29,
-    date: new Date(2024, 1, 8, 9, 15)
-  },
-  {
-    id: 'e3',
-    description: 'Some bananas',
-    amount: -5.99,
-    date: new Date(2021, 12, 1, 11, 27)
-  },
-  {
-    id: 'e4',
-    description: 'A GREAT book',
-    amount: -14.99,
-    date: new Date(2022, 2, 19, 12, 49)
-  },
-  {
-    id: 'e5',
-    description: 'Another book',
-    amount: -18.59,
-    date: new Date(2022, 2, 18, 13, 5)
-  },
-];
-
 export const TransactionsContext = createContext({
   transactions: [],
-  addTransaction: (tempTransaction: TransactionData) => { },
+  addTransaction: (tempTransaction: Transaction) => { },
+  setTransactions: (transactions: Transaction[]) => {},
   deleteTransaction: (id: string) => { },
   updateTransaction: (id: string, transaction: TransactionData) => { }
 });
@@ -44,8 +12,10 @@ export const TransactionsContext = createContext({
 function transactionsReducer(state: Transaction[], action: Action) {
   switch (action.type) {
     case 'ADD':
-      const id = new Date().toString() + Math.random().toString();
-      return [{ ...action.payload, id: id }, ...state]
+      return [action.payload, ...state]
+    case 'SET':
+      const inverted = action.payload.reverse();
+      return inverted;
     case 'UPDATE':
       const updatableTransactionIndex: number = state.findIndex(
         expense => expense.id === action.payload.id
@@ -63,10 +33,14 @@ function transactionsReducer(state: Transaction[], action: Action) {
 }
 
 function TransactionsContextProvider({ children }: { children: React.ReactNode }) {
-  const [transactionsState, dispatch] = useReducer(transactionsReducer, DUMMY_TRANSACTIONS);
+  const [transactionsState, dispatch] = useReducer(transactionsReducer, []);
 
   function addTransaction(tempTransaction: TransactionData) {
     dispatch({ type: 'ADD', payload: tempTransaction });
+  }
+
+  function setTransactions(transactions: Transaction[]) {
+    dispatch({ type: 'SET', payload: transactions });
   }
 
   function deleteTransaction(id: string) {
@@ -80,13 +54,13 @@ function TransactionsContextProvider({ children }: { children: React.ReactNode }
   const value = {
     transactions: transactionsState,
     addTransaction: addTransaction,
+    setTransactions: setTransactions,
     deleteTransaction: deleteTransaction,
     updateTransaction: updateTransaction
   };
 
   
   return (
-    // @ts-expect-error
     <TransactionsContext.Provider value={value}>
       {children}
     </TransactionsContext.Provider>

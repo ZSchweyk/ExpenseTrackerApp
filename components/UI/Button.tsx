@@ -2,7 +2,7 @@ import { Pressable, View, Text, StyleSheet } from "react-native";
 import { GlobalStyles } from "../../constants/styles";
 
 
-function Button({ children, onPress, mode, style }: { children: string, onPress: () => void, mode?: string, style?: {[key: string]: string | number} }) {
+function Button({ children, onPress, mode, style }: { children: string, onPress: () => void, mode?: string, style?: {[key: string]: string | number} }): JSX.Element {
   return (
     <View style={style}>
       <Pressable

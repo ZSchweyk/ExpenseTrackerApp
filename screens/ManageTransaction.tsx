@@ -1,18 +1,23 @@
-import { useContext, useLayoutEffect } from "react";
+import { useContext, useLayoutEffect, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { TransactionData, TransactionOverviewStackProp } from "../types";
 
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/styles";
-import Button from "../components/UI/Button";
 import { TransactionsContext } from "../store/transactions-context";
 import TransactionForm from "../components/ManageTransaction/TransactionForm";
 import { Transaction } from "../types";
+import { storeTransaction, updateTransaction, deleteTransaction } from "../util/https";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
 
 
 function ManageTransaction({ route, navigation }: TransactionOverviewStackProp): JSX.Element {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>();
+
   const transactionsCtx = useContext(TransactionsContext);
-  
+
   const editedTransactionId = route.params?.transactionId;
   const isEditing = !!editedTransactionId;
 
@@ -28,29 +33,54 @@ function ManageTransaction({ route, navigation }: TransactionOverviewStackProp):
     });
   }, [navigation, isEditing]);
 
-  function deleteTransactionHandler() {
-    transactionsCtx.deleteTransaction(editedTransactionId);
-    navigation.goBack();
+  async function deleteTransactionHandler() {
+    setIsSubmitting(true);
+    try {
+      await deleteTransaction(editedTransactionId);
+      transactionsCtx.deleteTransaction(editedTransactionId);
+      navigation.goBack();
+    } catch (error) {
+      setError('Could not delete transaction - please try again later!');
+      setIsSubmitting(false);
+    }
   }
 
   function cancelHandler() {
     navigation.goBack();
   }
 
-  function confirmHandler(transactionData: TransactionData) {
-    if (isEditing) {
-      transactionsCtx.updateTransaction(editedTransactionId, transactionData);
-    } else {
-      transactionsCtx.addTransaction(transactionData);
+  async function confirmHandler(transactionData: TransactionData) {
+    setIsSubmitting(true);
+    try {
+      if (isEditing) {
+        transactionsCtx.updateTransaction(editedTransactionId, transactionData);
+        await updateTransaction(editedTransactionId, transactionData);
+      } else {
+        const id = await storeTransaction(transactionData);
+        transactionsCtx.addTransaction({ ...transactionData, id: id });
+      }
+      navigation.goBack();
+    } catch (error) {
+      setError('Could not save data - please try again later!');
+      setIsSubmitting(false);
     }
-    navigation.goBack();
+    
+    
+  }
+
+  if (error && !isSubmitting) {
+    return <ErrorOverlay message={error} />
+  }
+
+  if (isSubmitting) {
+    return <LoadingOverlay />;
   }
 
   return (
     <View style={styles.container}>
       <TransactionForm
         submitButtonLabel={isEditing ? 'Update' : 'Add'}
-        onCancel={cancelHandler} 
+        onCancel={cancelHandler}
         onSubmit={confirmHandler}
         defaultValues={selectedTransaction}
       />

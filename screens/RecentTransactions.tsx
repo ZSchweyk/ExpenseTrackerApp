@@ -1,13 +1,42 @@
-import { Text } from "react-native";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import TransactionsOutput from "../components/TransactionsOutput/TransactionsOutput";
 import { TransactionsContext } from "../store/transactions-context";
 import { getDateMinusDays } from "../util/date";
 import { Transaction } from "../types";
+import { fetchTransactions } from "../util/https";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
 
 function RecentTransactions(): JSX.Element {
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError] = useState<string | null>();
+
   const transactionsCtx = useContext(TransactionsContext);
+
+  useEffect(() => {
+    async function getTransactions() {
+      setIsFetching(true);
+      try {
+        const transactions = await fetchTransactions();
+        transactionsCtx.setTransactions(transactions);
+      } catch (error) {
+        setError('Could not fetch transactions!');
+      }
+      setIsFetching(false);
+      
+    }
+    
+    getTransactions();
+  }, []);
+
+  if (error && !isFetching) {
+    return <ErrorOverlay message={error} />;
+  }
+
+  if (isFetching) {
+    return <LoadingOverlay />;
+  }
 
   const recentTransactions = transactionsCtx.transactions.filter((transaction: Transaction) => {
     const today = new Date();
