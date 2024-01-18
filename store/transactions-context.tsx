@@ -1,5 +1,5 @@
 import { createContext, useReducer } from "react";
-import { TempTransaction, Transaction, Action } from "../types";
+import { TransactionData, Transaction, Action } from "../types";
 
 const DUMMY_TRANSACTIONS: Transaction[] = [
   {
@@ -36,9 +36,9 @@ const DUMMY_TRANSACTIONS: Transaction[] = [
 
 export const TransactionsContext = createContext({
   transactions: [],
-  addTransaction: (tempTransaction: TempTransaction) => { },
+  addTransaction: (tempTransaction: TransactionData) => { },
   deleteTransaction: (id: string) => { },
-  updateTransaction: (transaction: Transaction) => { }
+  updateTransaction: (id: string, transaction: TransactionData) => { }
 });
 
 function transactionsReducer(state: Transaction[], action: Action) {
@@ -65,7 +65,7 @@ function transactionsReducer(state: Transaction[], action: Action) {
 function TransactionsContextProvider({ children }: { children: React.ReactNode }) {
   const [transactionsState, dispatch] = useReducer(transactionsReducer, DUMMY_TRANSACTIONS);
 
-  function addTransaction(tempTransaction: TempTransaction) {
+  function addTransaction(tempTransaction: TransactionData) {
     dispatch({ type: 'ADD', payload: tempTransaction });
   }
 
@@ -73,8 +73,8 @@ function TransactionsContextProvider({ children }: { children: React.ReactNode }
     dispatch({ type: 'DELETE', payload: id });
   }
 
-  function updateTransaction(transaction: Transaction) {
-    dispatch({ type: 'UPDATE', payload: transaction });
+  function updateTransaction(id: string, transaction: TransactionData) {
+    dispatch({ type: 'UPDATE', payload: {id: id, ...transaction} });
   }
 
   const value = {

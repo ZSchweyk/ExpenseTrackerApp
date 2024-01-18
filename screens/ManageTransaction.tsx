@@ -1,11 +1,13 @@
 import { useContext, useLayoutEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { TransactionOverviewStackProp } from "../types";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { TransactionData, TransactionOverviewStackProp } from "../types";
 
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/styles";
 import Button from "../components/UI/Button";
 import { TransactionsContext } from "../store/transactions-context";
+import TransactionForm from "../components/ManageTransaction/TransactionForm";
+import { Transaction } from "../types";
 
 
 function ManageTransaction({ route, navigation }: TransactionOverviewStackProp): JSX.Element {
@@ -13,6 +15,12 @@ function ManageTransaction({ route, navigation }: TransactionOverviewStackProp):
   
   const editedTransactionId = route.params?.transactionId;
   const isEditing = !!editedTransactionId;
+
+  // Will be undefined if there's no transactionId parameter provided,
+  // which will occur if the user is adding a new transaction
+  const selectedTransaction: Transaction | undefined = transactionsCtx.transactions.find(
+    (transaction: Transaction) => transaction.id === editedTransactionId
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -29,30 +37,23 @@ function ManageTransaction({ route, navigation }: TransactionOverviewStackProp):
     navigation.goBack();
   }
 
-  function confirmHandler() {
+  function confirmHandler(transactionData: TransactionData) {
     if (isEditing) {
-      transactionsCtx.updateTransaction({
-        id: editedTransactionId,
-        description: 'Test',
-        amount: 19.99,
-        date: new Date('2022-05-19')
-      });
+      transactionsCtx.updateTransaction(editedTransactionId, transactionData);
     } else {
-      transactionsCtx.addTransaction({
-        description: 'Test',
-        amount: 19.99,
-        date: new Date('2022-05-19')
-      });
+      transactionsCtx.addTransaction(transactionData);
     }
     navigation.goBack();
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttons}>
-        <Button style={styles.button} mode="flat" onPress={cancelHandler}>Cancel</Button>
-        <Button style={styles.button} onPress={confirmHandler} >{isEditing ? 'Update' : 'Add'}</Button>
-      </View>
+      <TransactionForm
+        submitButtonLabel={isEditing ? 'Update' : 'Add'}
+        onCancel={cancelHandler} 
+        onSubmit={confirmHandler}
+        defaultValues={selectedTransaction}
+      />
       {isEditing && (
         <View style={styles.deleteContainer}>
           <IconButton
@@ -74,15 +75,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     backgroundColor: GlobalStyles.colors.primary800,
-  },
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  button: {
-    minWidth: 120,
-    marginHorizontal: 8,
   },
   deleteContainer: {
     marginTop: 16,

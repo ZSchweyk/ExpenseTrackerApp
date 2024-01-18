@@ -14,6 +14,16 @@ function TransactionItem({ transaction } : { transaction: Transaction }): JSX.El
       transactionId: transaction.id,
     });
   }
+
+  function amountContainerBackgroundColor(): object {
+    if (transaction.amount < 0) {
+      return { backgroundColor: GlobalStyles.colors.negative };
+    } else if (transaction.amount > 0) {
+      return { backgroundColor: GlobalStyles.colors.positive };
+    } else {
+      return { backgroundColor: 'white' };
+    }
+  }
   
   return (
     <Pressable
@@ -25,7 +35,7 @@ function TransactionItem({ transaction } : { transaction: Transaction }): JSX.El
           <Text style={[styles.textBase, styles.description]}>{transaction.description}</Text>
           <Text style={styles.textBase}>{getFormattedDate(transaction.date)}</Text>
         </View>
-        <View style={styles.amountContainer}>
+        <View style={[styles.amountContainer, amountContainerBackgroundColor()]}>
           <Text style={styles.amount}>${-transaction.amount.toFixed(2)}</Text>
         </View>
       </View>
@@ -63,7 +73,7 @@ const styles = StyleSheet.create({
   amountContainer: {
     paddingHorizontal: 12,
     paddingVertical: 4,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 4,

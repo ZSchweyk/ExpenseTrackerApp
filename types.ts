@@ -6,13 +6,13 @@ type Action = {
   payload: any,
 };
 
-type TempTransaction = {
+type TransactionData = {
   amount: number,
   date: Date,
-  description: string
+  description: string,
 };
 
-type Transaction = TempTransaction & {
+type Transaction = TransactionData & {
   id: string
 };;
 
@@ -34,7 +34,7 @@ type TransactionOverviewStackProp = NativeStackScreenProps<
 >;
 
 export {
-  TempTransaction,
+  TransactionData,
   Transaction,
   TransactionsOverviewStackParamList,
   TransactionOverviewNavigationProp,
